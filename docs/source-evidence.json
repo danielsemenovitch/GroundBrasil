@@ -1,0 +1,129 @@
+{
+  "sources": [
+    {
+      "id": "agencia-brasil",
+      "name": "Agência Brasil",
+      "url": "https://agenciabrasil.ebc.com.br",
+      "feed": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml",
+      "feedStatus": "200 XML, 10 articles",
+      "owner": "Empresa Brasil de Comunicação (EBC)",
+      "ownerEvidence": "https://www.ebc.com.br/sobre/sala-de-imprensa",
+      "terms": "https://agenciabrasil.ebc.com.br/sobre",
+      "additionalTerms": "https://acessoainformacao.ebc.com.br/perguntas-frequentes",
+      "permissions": "Reproduction authorized for journalistic purposes with source credit; photographs only if authored by AB/EBC and credit known. Exclude third-party agency material without permission. Commercial uses require licensing.",
+      "imagePolicy": "Only known EBC/AB-owned photos; per-article credit required. RSS imagem-destaque does not itself establish authorship.",
+      "leaning": null,
+      "robots": "https://agenciabrasil.ebc.com.br/robots.txt",
+      "crawlDelaySeconds": 10,
+      "verifiedAt": "2026-10-28"
+    },
+    {
+      "id": "camara",
+      "name": "Agência Câmara",
+      "url": "https://www.camara.leg.br/noticias/",
+      "feed": "https://www.camara.leg.br/noticias/rss/ultimas-noticias",
+      "feedStatus": "200 XML, 20 articles",
+      "owner": "Câmara dos Deputados",
+      "ownerEvidence": "https://infograficos.camara.leg.br/manual-de-comunicacao/agencia-camara/",
+      "terms": "https://infograficos.camara.leg.br/manual-de-comunicacao/agencia-camara/",
+      "permissions": "News reproduction free with Agência Câmara signature and appropriate author/photo credit. Per-story footer repeats authorization.",
+      "imagePolicy": "RSS content:encoded contains .midia-creditos author and img src. Restrict photos to Câmara-owned or other explicitly authorized agencies.",
+      "leaning": null,
+      "robots": "https://www.camara.leg.br/robots.txt",
+      "crawlDelaySeconds": 10,
+      "verifiedAt": "2026-10-28"
+    },
+    {
+      "id": "senado",
+      "name": "Agência Senado",
+      "url": "https://www12.senado.leg.br/noticias/",
+      "feed": "https://www12.senado.leg.br/noticias/rss",
+      "feedStatus": "200 XML, 15 articles",
+      "owner": "Senado Federal",
+      "ownerEvidence": "https://www12.senado.leg.br/assessoria-de-imprensa/lista-dos-servicos-da-secom",
+      "terms": "https://www12.senado.leg.br/noticias/politica-de-uso",
+      "permissions": "Articles/photos freely reproducible without mischaracterization, with Agência Senado AND author credit. Audio: Rádio Senado; video: TV Senado and author.",
+      "imagePolicy": "No images supplied in standard RSS. Obtain and verify attribution from article or show typographic card.",
+      "leaning": null,
+      "robots": "https://www12.senado.leg.br/robots.txt",
+      "crawlDelaySeconds": 0,
+      "verifiedAt": "2026-10-28"
+    },
+    {
+      "id": "publica",
+      "name": "Agência Pública",
+      "url": "https://apublica.org",
+      "feed": "https://apublica.org/feed/",
+      "feedStatus": "200 XML, 10 articles",
+      "owner": "Agência Pública — organização de jornalismo investigativo sem fins lucrativos",
+      "ownerEvidence": "https://apublica.org/quem-somos/",
+      "terms": "https://apublica.org/republique/",
+      "permissions": "CC BY-ND republication requires complete unedited report, attribution and republication seal; excludes columns/newsletters; photos only together with reports. MVP should index supplied headline, date, author, URL only; no full text, abridged report or photo. This metadata-only interpretation is conservative, not explicit additional publisher permission.",
+      "imagePolicy": "Do not use Pública images in aggregator cards.",
+      "leaning": null,
+      "robots": "https://apublica.org/robots.txt",
+      "crawlDelaySeconds": 10,
+      "verifiedAt": "2026-10-28"
+    }
+  ],
+  "seedEvent": {
+    "articles": [
+      {
+        "sourceId": "agencia-brasil",
+        "title": "Lula é reeleito presidente do Brasil em virada histórica",
+        "url": "https://agenciabrasil.ebc.com.br/politica/noticia/2026-10/lula-e-reeleito-presidente-do-brasil-em-virada-historica",
+        "publishedAt": "2026-10-26T00:11:00Z",
+        "author": "Marcelo Brandão e Pedro Peduzzi — Agência Brasil",
+        "emphasis": "Mobilização da campanha nas redes sociais e nas ruas.",
+        "imageUrl": "https://imagens.ebc.com.br/lDE2VCNGqHn-NSqvTd9jKPK4S18=/1600x800/https://agenciabrasil.ebc.com.br/sites/default/files/thumbnails/image/2026/10/24/_int7543.jpg?itok=kHE-BaLo",
+        "photoCredit": "Paulo Pinto/Agência Brasil",
+        "photoCaption": "Lula encerra campanha com caminhada na Avenida Paulista, em 24 de outubro de 2026.",
+        "imageProvenance": "https://agenciabrasil.ebc.com.br/politica/noticia/2026-10/lula-e-reeleito-presidente-do-brasil-em-virada-historica",
+        "imageReuse": "Authorized journalistic reproduction of AB-owned photo with attribution, per Agência Brasil reproduction policy."
+      },
+      {
+        "sourceId": "camara",
+        "title": "Lula é reeleito presidente com quase 52% dos votos válidos no 2º turno",
+        "url": "https://www.camara.leg.br/noticias/1313705-lula-e-reeleito-presidente-com-quase-52-dos-votos-validos-no-2o-turno",
+        "publishedAt": "2026-10-26T00:29:00Z",
+        "updatedAt": "2026-10-26T10:00:00Z",
+        "author": "Agência Câmara",
+        "emphasis": "Resultado dos votos, virada entre os turnos e abstenção.",
+        "photoCredit": "Paulo Pinto/Agência Brasil"
+      },
+      {
+        "sourceId": "senado",
+        "title": "Lula é reeleito para quarto mandato de presidente",
+        "url": "https://www12.senado.leg.br/noticias/materias/2026/10/25/lula-e-reeleito-para-quarto-mandato-de-presidente",
+        "publishedAt": "2026-10-26T00:40:00Z",
+        "author": "Agência Senado",
+        "emphasis": "Quarto mandato e sequência da apuração."
+      }
+    ],
+    "neutralSummary": "Luiz Inácio Lula da Silva foi reeleito presidente no segundo turno de 25 de outubro. As três publicações relatam a vitória sobre Flávio Bolsonaro e a conquista de um quarto mandato.",
+    "agreement": "Vencedor e quarto mandato.",
+    "context": "Percentuais publicados diferem conforme o andamento da apuração e a atualização da notícia; não inferir contradição factual.",
+    "finalResultEvidence": "https://www.tse.jus.br/comunicacao/noticias/2026/Outubro/presidente-do-tse-anuncia-reeleicao-de-lula-e-faz-balanco-do-2o-turno-das-eleicoes-2026"
+  },
+  "disabledCandidates": [
+    {
+      "name": "Brasil de Fato",
+      "feed": "https://www.brasildefato.com.br/feed/",
+      "status": "403; no bypass",
+      "terms": "https://www.brasildefato.com.br/quem-somos/",
+      "leaningEvidence": "Self-declares aligned left in editorial principle 10; label as self-description if used, not external independent rating."
+    },
+    {
+      "name": "Jornal da USP",
+      "feed": "https://jornal.usp.br/feed/",
+      "status": "403; no bypass",
+      "terms": "https://jornal.usp.br/contato/"
+    },
+    {
+      "name": "Agência FAPESP",
+      "feed": "https://agencia.fapesp.br/rss",
+      "status": "200 XML; not enabled, restricted NC-ND + pixel for republication",
+      "terms": "https://agencia.fapesp.br/politica-de-republicacao-da-agencia-fapesp/30159"
+    }
+  ]
+}

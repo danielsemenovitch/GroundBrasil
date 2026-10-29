@@ -1,0 +1,26 @@
+name: Atualizar notícias
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */2 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: news-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: vars.SITE_ORIGIN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Coletar e verificar persistência
+        run: node scripts/refresh-hosted.mjs
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+          SITES_ACCESS_TOKEN: ${{ secrets.SITES_ACCESS_TOKEN }}
