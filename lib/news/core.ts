@@ -56,7 +56,19 @@ const arr=(v:unknown):unknown[]=>v===undefined?[]:Array.isArray(v)?v:[v];
 /** Some Portuguese feeds emit localized RFC month names (e.g. Out). */
 export function parseFeedDate(value:string):number {
  const months:Record<string,string>={jan:'Jan',fev:'Feb',mar:'Mar',abr:'Apr',mai:'May',jun:'Jun',jul:'Jul',ago:'Aug',set:'Sep',out:'Oct',nov:'Nov',dez:'Dec'};
- return Date.parse(value.replace(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/gi,m=>months[m.toLowerCase()]));
+ return Date.parse(value.replace(/^(seg|ter|qua|qui|sex|s[aá]b|dom),?\s*/i,'').replace(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/gi,m=>months[m.toLowerCase()]));
+}
+export function publisherArticleUrl(raw:string,source:Source):string|null{
+ let url=canonicalUrl(raw,source.url);if(!url)return null;
+ // Folha explicitly supplies tracking wrappers in its RSS. Unwrap without a request.
+ if(source.id==='folha'&&new URL(url).hostname==='redir.folha.com.br'){
+  if(!/^\/redir\/online\/[\w/-]+\/\*https?:\/\//.test(new URL(url).pathname))return null;
+  url=canonicalUrl(url.slice(url.indexOf('*')+1));if(!url)return null;
+ }
+ const parsed=new URL(url);
+ if(parsed.username||parsed.password||!(source.articleHosts||[new URL(source.url).hostname]).includes(parsed.hostname))return null;
+ if(source.id==='folha'&&parsed.protocol==='http:')parsed.protocol='https:';
+ return parsed.href;
 }
 export function parseFeed(xml:string,source:Source,now=new Date().toISOString(),categoryHint?:Category):Article[] {
  if(xml.length>3_000_000 || /<!DOCTYPE|<!ENTITY/i.test(xml))throw new Error('Feed inválido ou acima do limite');
@@ -67,7 +79,7 @@ export function parseFeed(xml:string,source:Source,now=new Date().toISOString(),
  for(const record of raw.slice(0,60)){
   const item=record as Record<string,XmlValue>;
   const title=plainText(txt(item.title));const link=txt(item.link)||txt((item.link as Record<string,XmlValue>)?.['@_href']);
-  const url=canonicalUrl(link,source.url);if(!url||!title||title.length<10||!(source.articleHosts||[new URL(source.url).hostname]).includes(new URL(url).hostname))continue;
+  const url=publisherArticleUrl(link,source);if(!url||!title||title.length<10)continue;
   const date=txt(item.pubDate||item.published||item.updated||item['dc:date']);const ms=parseFeedDate(date);
   if(!Number.isFinite(ms)||ms>Date.parse(now)+300000)continue;
   const publishedAt=new Date(ms).toISOString();
@@ -99,15 +111,26 @@ const EQUIVALENTS:Record<string,string>={
  anuncia:'anunciar',anunciou:'anunciar',anunciado:'anunciar',anunciada:'anunciar',anuncio:'anunciar',
  eleicoes:'eleicao',reeleito:'reeleger',reeleita:'reeleger',reeleicao:'reeleger',
  americanos:'americano',americanas:'americano',norteamericanos:'americano',estadunidenses:'americano',
+ arquiva:'arquivar',arquivou:'arquivar',arquivamento:'arquivar',arquivadas:'arquivar',arquivados:'arquivar',
+ processa:'processar',processou:'processar',processado:'processar',processada:'processar',
+ convoca:'convocar',convocou:'convocar',convocacao:'convocar',amistosos:'amistoso',
+ calculo:'calcular',calcula:'calcular',calculou:'calcular',calculada:'calcular',
+ investigacoes:'investigacao',investigados:'investigado',condenados:'condenado',mulheres:'mulher',
+ familias:'familia',
+ repercute:'repercutir',repercutem:'repercutir',repercussao:'repercutir',
+ discute:'discutir',discutem:'discutir',discussao:'discutir',debate:'debater',debatem:'debater',
 };
 const ACTIONS=new Set(['aprovar','rejeitar','sancionar','vetar','indiciar','prender']);
 function eventTokens(title:string):string[]{
- const text=normalize(title).replace(/policia federal/g,'pf').replace(/banco central/g,'bc').replace(/supremo tribunal federal/g,'stf').replace(/estados unidos/g,'eua');
- return [...new Set([...tokens(text),...(text.match(/\b(?:pf|bc|pl|mp|sp|rj|mg|rs|es)\b/g)||[])].map(t=>EQUIVALENTS[t]||t))];
+ let text=normalize(title).replace(/^(audio|video|ao vivo):?\s*/,'').replace(/policia federal/g,'pf').replace(/banco central europeu/g,'bce').replace(/banco central/g,'bc').replace(/uniao europeia/g,'ue').replace(/supremo tribunal federal/g,'stf').replace(/estados unidos/g,'eua').replace(/dividas\s+(?:de|das)\s+familias\s+em\s+atraso/g,'inadimplencia familias');
+ if(/\bcuba\b/.test(text))text=text.replace(/\bembargo\b/g,'bloqueio');
+ return [...new Set([...tokens(text),...(text.match(/\b(?:pf|bc|ue|pl|mp|sp|rj|mg|rs|es)\b/g)||[])].map(t=>EQUIVALENTS[t]||t))];
 }
 function eventFeatures(a:Article){
  const title=normalize(a.title),ts=eventTokens(a.title);
  return {ts,set:new Set(ts),published:Date.parse(a.publishedAt),
+  chamber:/\bcamara\b/.test(title)?'camara':/\bsenado\b/.test(title)?'senado':['camara','senado'].includes(a.sourceId)?a.sourceId:null,
+  percentages:[...title.matchAll(/\b(\d+(?:[.,]\d+)?)\s*%/g)].map(m=>m[1].replace(',','.')),
   ids:[...title.matchAll(/\b(?:pl|pec|mp|concurso)\s*(?:n[ºo.]?\s*)?(\d{2,}(?:[/.]\d{2,4})?)/g)].map(m=>m[1]),
   actions:ts.filter(t=>ACTIONS.has(t)),
   outcomes:['derrota','vitoria','prisao','morte'].map(word=>title.match(new RegExp(`\\b${word}\\s+(?:de|do|da)\\s+([a-z]+)`))?.[1]),
@@ -126,12 +149,19 @@ export function createSimilarity(articles:Article[]) {
   if(x.ids.length&&y.ids.length&&!x.ids.some(id=>y.ids.includes(id)))return 0;
   if(x.actions.length&&y.actions.length&&!x.actions.some(t=>y.actions.includes(t)))return 0;
   if(x.outcomes.some((t,i)=>t&&y.outcomes[i]&&t!==y.outcomes[i]))return 0;
+  // Different fiscal aggregates and daily market closings can share many title words.
+  if((x.set.has('superavit')&&y.set.has('deficit'))||(x.set.has('deficit')&&y.set.has('superavit')))return 0;
+  if(x.set.has('ibovespa')&&y.set.has('ibovespa')&&new Date(x.published-3*3600000).toISOString().slice(0,10)!==new Date(y.published-3*3600000).toISOString().slice(0,10))return 0;
   // Approval by two separate chambers is a different legislative step.
-  if(x.actions.includes('aprovar')&&y.actions.includes('aprovar')&&((x.set.has('camara')&&y.set.has('senado'))||(x.set.has('senado')&&y.set.has('camara')))&&!(x.set.has('camara')&&x.set.has('senado'))&&!(y.set.has('camara')&&y.set.has('senado')))return 0;
+  if(['aprovar','repercutir','discutir','debater'].some(t=>x.set.has(t)&&y.set.has(t))&&x.chamber&&y.chamber&&x.chamber!==y.chamber&&!(x.set.has('camara')&&x.set.has('senado'))&&!(y.set.has('camara')&&y.set.has('senado')))return 0;
   let common=0,shared=0;for(const t of x.ts)if(y.set.has(t)){common++;shared+=weights.get(t)||1;}
   if(common<3)return 0;
   const av=norms.get(a)||sum(x.ts),bv=norms.get(b)||sum(y.ts);
-  return .7*shared/Math.sqrt(av*bv)+.3*shared/Math.min(av,bv);
+  const lexical=.7*shared/Math.sqrt(av*bv)+.3*shared/Math.min(av,bv);
+  // An exact percentage plus two named institutions supports a specific fiscal event.
+  const institutions=['tcu','cbs','bc','ibge','copom','stf','tse','mpt','mpf'];
+  const precise=x.percentages.some(p=>y.percentages.includes(p))&&institutions.filter(t=>x.set.has(t)&&y.set.has(t)).length>=2;
+  return Math.min(1,lexical+(precise&&lexical>=.38?.12:0));
  };
 }
 export function similarity(a:Article,b:Article):number {return createSimilarity([a,b])(a,b);}
@@ -187,16 +217,30 @@ export function makeEdition(articles:Article[],feeds:FeedStatus[],now=new Date()
   const old=m.get(a.url);
   m.set(a.url,{...a,image:a.image||old?.image||null,imageCheckedAt:a.imageCheckedAt||old?.imageCheckedAt,category:categorize(a.title,a.tags,a.url,a.categoryHint)});
  }
- // Round-robin topic buckets preserve each publisher's smaller sections within its quota.
- const retained:Article[]=[];
+ const candidates=[...m.values()].filter(a=>SOURCES.some(s=>s.id===a.sourceId));
+ // Protect candidate comparisons before per-publisher quotas discard their counterparts.
+ const compare=createSimilarity(candidates),index=new Map<string,Article[]>(),overlap=new Set<Article>();
+ for(const a of candidates){
+  const terms=eventTokens(a.title),shared=new Map<Article,number>();
+  for(const term of terms)for(const b of index.get(term)||[])if(a.sourceId!==b.sourceId&&Math.abs(Date.parse(a.publishedAt)-Date.parse(b.publishedAt))<=72*3600000)shared.set(b,(shared.get(b)||0)+1);
+  for(const [b,n] of shared)if(n>=3&&compare(a,b)>.54){overlap.add(a);overlap.add(b);}
+  for(const term of terms){if(!index.has(term))index.set(term,[]);index.get(term)!.push(a);}
+ }
+ // Reserve at most half of each quota for matches, then alternate topic buckets.
+ const publisherSelections:Article[][]=[];
  for(const source of SOURCES){
+  const sorted=candidates.filter(a=>a.sourceId===source.id).sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt));
+  const selected=sorted.filter(a=>overlap.has(a)).slice(0,40),reserved=new Set(selected);
   const buckets=new Map<Category,Article[]>();
-  for(const a of [...m.values()].filter(a=>a.sourceId===source.id).sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt))){
+  for(const a of sorted.filter(a=>!reserved.has(a))){
    if(!buckets.has(a.category))buckets.set(a.category,[]);buckets.get(a.category)!.push(a);
   }
-  const selected:Article[]=[];while(selected.length<80){let added=false;for(const bucket of buckets.values()){if(selected.length>=80)break;const a=bucket.shift();if(a){selected.push(a);added=true;}}if(!added)break;}
-  retained.push(...selected);
+  while(selected.length<80){let added=false;for(const bucket of buckets.values()){if(selected.length>=80)break;const a=bucket.shift();if(a){selected.push(a);added=true;}}if(!added)break;}
+  publisherSelections.push(selected);
  }
- retained.sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt));retained.splice(800);
+ // Share the global cap across publishers, including quieter sources.
+ const retained:Article[]=[];
+ for(let i=0;i<80&&retained.length<800;i++)for(const selected of publisherSelections){if(retained.length>=800)break;if(selected[i])retained.push(selected[i]);}
+ retained.sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt));
  return {version:1,generatedAt:now,articles:retained,stories:clusterArticles(retained,prior),feeds};
 }

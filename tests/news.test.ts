@@ -104,3 +104,63 @@ test('a verified photo survives RSS updates and illustrates its event with origi
  assert.equal(e.articles.find(a=>a.id==='ab')?.imageCheckedAt,now);
  assert.equal(e.stories.length,1);assert.equal(e.stories[0].sourceIds.length,2);assert.deepEqual(e.stories[0].image,image);
 });
+
+test('Latin-1 XML declarations and configured UOL encoding preserve Portuguese headlines',async()=>{
+ const {boundedText}=await import('../lib/news/ingestion.ts');
+ const legacy=new Uint8Array([...Buffer.from('<?xml version="1.0" encoding="ISO-8859-1"?><rss>Not'),0xed,...Buffer.from('cias</rss>')]);
+ assert.match(await boundedText(new Response(legacy)),/Notícias/);
+ const uol=new Uint8Array([0x41,0xe7,0xe3,0x6f]);
+ assert.equal(await boundedText(new Response(uol),3_000_000,'windows-1252'),'Ação');
+ await assert.rejects(()=>boundedText(new Response(uol)));
+});
+test('Folha RSS wrappers resolve only to approved publisher hosts; UOL partner links are not relabelled',async()=>{
+ const {publisherArticleUrl,parseFeedDate}=await import('../lib/news/core.ts');
+ const source=SOURCES.find(s=>s.id==='folha')!;
+ const target='https://www1.folha.uol.com.br/poder/2026/10/report.shtml';
+ assert.equal(publisherArticleUrl('https://redir.folha.com.br/redir/online/poder/rss091/*'+target,source),target);
+ assert.equal(publisherArticleUrl('https://redir.folha.com.br/redir/online/poder/rss091/*https://www1.folha.uol.com.br.evil.test/abc',source),null);
+ assert.equal(publisherArticleUrl(target,SOURCES.find(s=>s.id==='uol')!),null);
+ assert.equal(parseFeedDate('Qui, 29 Out 2026 18:38:39 -0300'),Date.parse('2026-10-29T21:38:39Z'));
+});
+test('thirty reviewed RSS pairs distinguish events from shared themes',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const fixture=JSON.parse(await readFile(new URL('./fixtures/comparison-audit-2026-10-29.json',import.meta.url),'utf8'));
+ const edition=makeEdition(fixture.corpus,[],fixture.evaluatedAt);
+ const groups=new Map(edition.stories.flatMap(s=>s.articles.map(a=>[a.url,s.id])));
+ for(const p of fixture.pairs){
+  const [a,b]=p.articles as Article[],label=a.title+' / '+b.title;
+  if(p.sameEvent){assert.ok(groups.has(a.url)&&groups.has(b.url),label);assert.equal(groups.get(a.url),groups.get(b.url),label);}
+  else assert.equal(clusterArticles(p.articles).length,2,label);
+ }
+});
+test('candidate comparisons survive the publisher quota alongside newer single-source headlines',()=>{
+ const many=Array.from({length:100},(_,i)=>({...article(`Notícia isolada sobre assuntos locais número ${i}`,`new${i}`,'g1'),url:`https://g1.globo.com/politica/new${i}`}));
+ const older={...article('TCU aprova cálculo de referência da CBS em 11,3%','match','g1','2026-10-26T12:00:00Z'),url:'https://g1.globo.com/economia/match'};
+ const other={...older,id:'other',sourceId:'agencia-brasil',url:'https://agenciabrasil.ebc.com.br/economia/match'};
+ const e=makeEdition([...many,older,other],[],now);
+ assert.equal(e.articles.filter(a=>a.sourceId==='g1').length,80);assert.ok(e.articles.some(a=>a.id==='match'));
+ assert.ok(e.stories.some(s=>s.sourceIds.length===2));
+});
+test('the global 800-article cap retains quieter publishers when all quotas compete',()=>{
+ const a=SOURCES.flatMap((s,n)=>Array.from({length:s.id==='uol'?1:80},(_,i)=>({...article(`Reportagem da fonte ${n} sobre assunto número ${i}`,`${n}-${i}`,s.id,s.id==='uol'?'2026-10-20T12:00:00Z':'2026-10-27T12:00:00Z'),url:`${s.url}/test/${i}`})));
+ const e=makeEdition(a,[],now);assert.equal(e.articles.length,800);
+ assert.ok(e.articles.some(a=>a.sourceId==='uol'));assert.equal(new Set(e.articles.map(a=>a.sourceId)).size,SOURCES.length);
+});
+test('homepage freshness outranks old coverage while explicit sorts remain available',async()=>{
+ const {rankStories,homepageStories}=await import('../lib/news/ranking.ts');
+ const stories=clusterArticles([article('Uma manchete sobre um evento antigo','old','camara','2026-10-23T12:00:00Z'),article('Uma manchete sobre outro evento recente','new','g1','2026-10-28T11:00:00Z'),article('Mais uma manchete recém-publicada','latest','senado','2026-10-28T11:55:00Z')]);
+ const old=stories.find(s=>s.articles[0].id==='old')!,recent=stories.find(s=>s.articles[0].id==='new')!,latest=stories.find(s=>s.articles[0].id==='latest')!;
+ old.sourceIds=['camara','senado','agencia-brasil','g1','bbc'];recent.sourceIds=['g1','folha'];
+ assert.equal(rankStories(stories,'relevance',Date.parse(now))[0].id,recent.id);
+ assert.equal(rankStories(stories,'coverage',Date.parse(now))[0].id,old.id);
+ assert.equal(rankStories(stories,'recent',Date.parse(now))[0].id,latest.id);
+ assert.equal(homepageStories([old,latest],'relevance',Date.parse(now)).comparison,undefined);
+ assert.equal(homepageStories([]).featured,undefined);
+});
+
+test('a valid UOL feed with partner-only links remains healthy with zero eligible items',async()=>{
+ const {collectSourceFeeds}=await import('../lib/news/ingestion.ts');
+ const xml='<rss><channel><item><title>Uma notícia de outro veículo que o UOL distribui</title><link>https://www1.folha.uol.com.br/poder/report.shtml</link><pubDate>Qui, 27 Out 2026 12:00:00 GMT</pubDate></item></channel></rss>';
+ const r=await collectSourceFeeds(SOURCES.find(s=>s.id==='uol')!,undefined,now,(async()=>new Response(xml)) as typeof fetch);
+ assert.equal(r.status.ok,true);assert.equal(r.status.count,0);assert.equal(r.articles.length,0);
+});

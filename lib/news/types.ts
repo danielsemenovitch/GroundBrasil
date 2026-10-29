@@ -10,6 +10,7 @@ export interface Source {
   articleHosts?: string[];
   checkedAt?: string;
   additionalFeeds?: SourceFeed[];
+  feedEncoding?: 'utf-8' | 'windows-1252' | 'iso-8859-1';
 }
 export interface NewsImage { url: string; credit: string; licenseUrl: string; sourceUrl: string }
 export interface Article {

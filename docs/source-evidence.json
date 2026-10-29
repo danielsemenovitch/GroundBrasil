@@ -146,6 +146,32 @@
       "imagePolicy": "Disabled",
       "leaning": null,
       "verifiedAt": "2026-10-29"
+    },
+    {
+      "id": "folha",
+      "name": "Folha de S.Paulo",
+      "feed": "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml",
+      "terms": "https://www1.folha.uol.com.br/feed/?d=1",
+      "owner": "Empresa Folha da Manhã S.A., identified in the RSS-directory footer",
+      "ownerEvidence": "https://www1.folha.uol.com.br/feed/?d=1",
+      "permissions": "Publisher-offered RSS; unchanged headline, original date, available author and article link only. This metadata-only implementation is not a claim of a broader republication license. No article bodies, excerpts or photographs; no paywall access.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29",
+      "parserNotes": "ISO-8859-1 XML and explicitly validated Folha redirect wrappers; four feeds verified HTTP 200."
+    },
+    {
+      "id": "uol",
+      "name": "UOL Notícias",
+      "feed": "https://rss.uol.com.br/feed/noticias.xml",
+      "terms": "https://rss.uol.com.br/",
+      "owner": "Universo Online S.A., identified in the official privacy policy",
+      "ownerEvidence": "https://sobreuol.noticias.uol.com.br/normas-de-seguranca-e-privacidade",
+      "permissions": "Publisher-offered RSS; unchanged headline, original date, available author and article link only. This metadata-only implementation is not a claim of a broader republication license. No article bodies, excerpts or photographs; no paywall access.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29",
+      "parserNotes": "Windows-1252 feed, localized weekday/month names; off-publisher article URLs excluded. The feed may contain only partners at a given fetch."
     }
   ],
   "seedEvent": {
@@ -213,5 +239,25 @@
     "brasil-de-fato": "Feed returned 200 XML on 2026-10-29. About page retrieved through web search; direct about/robots fetch returned 403 and was not bypassed. Editorial principle 10 is a self-description, not an independent bias assessment.",
     "folha": "Not enabled in this expansion; feed has redirect-wrapped article links and reproduction restrictions need further review.",
     "cadence": "One configured RSS request per source per run, conditional requests, timeout, no retry/bypass loop."
-  }
+  },
+  "excludedCandidates20261029": [
+    {
+      "name": "Metrópoles",
+      "reason": "Terms forbid automated access without prior permission. Not enabled.",
+      "evidence": "https://www.metropoles.com/termos-de-uso"
+    },
+    {
+      "name": "CNN Brasil",
+      "reason": "The evaluated RSS redirected to admin.cnnbrasil.com.br; its robots.txt disallows crawling that host. Not enabled.",
+      "evidence": "https://admin.cnnbrasil.com.br/robots.txt"
+    },
+    {
+      "name": "Poder360",
+      "reason": "RSS responded, but reproduction policy and robots could not be verified (HTTP 403). Not enabled."
+    },
+    {
+      "name": "R7",
+      "reason": "Mixed RSS included technical validation items; source-policy verification not completed. Not enabled."
+    }
+  ]
 }
