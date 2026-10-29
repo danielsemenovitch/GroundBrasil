@@ -12,8 +12,8 @@ MVP editorial em português brasileiro: RSS real, comparação entre fontes, fav
 - CSS editorial próprio, Lucide; não depende de componentes visuais pagos.
 - Cloudflare D1: artigos normalizados, edição publicada, histórico de ingestão e lease de concorrência.
 - `lib/news/core.ts`: parser RSS/Atom, canonização, categorias, deduplicação, agrupamento, cobertura e critérios de pontos cegos. Funções puras e testadas.
-- `lib/news/repository.ts`: coleta e persistência. Dez feeds fixos, timeout, limite de XML, sem entidades externas, ETag/Last-Modified, retenção e publicação transacional.
-- `data/bootstrap.json`: edição real coletada em 28/10/2026, usada e identificada como snapshot apenas enquanto o banco está vazio. Não é uma fixture fictícia.
+- `lib/news/repository.ts`: coleta e persistência. Dez veículos e 17 feeds fixos, timeout, limite de XML, sem entidades externas, ETag/Last-Modified, retenção e publicação transacional.
+- `data/bootstrap.json`: edição real de fontes verificadas, atualizada em 29/10/2026, usada e identificada como snapshot apenas enquanto o banco está vazio. Não é uma fixture fictícia.
 - `data/editorial.ts`: agrupamento revisado com URLs explícitas, síntese e observações sustentadas por três reportagens. Não infere opinião política.
 - APIs versionadas reutilizáveis para um aplicativo Android futuro. Não há aplicativo Android neste repositório.
 
@@ -72,7 +72,17 @@ O workflow `.github/workflows/news-refresh.yml` é uma alternativa preparada par
 
 Todas as fontes estão **não avaliadas** politicamente. Propriedade pública não significa centro/esquerda/direita. A versão limitada de pontos cegos mostra regras, mas não pontua histórias sem dados suficientes. Não há integração de fact-checking nem vereditos automatizados.
 
-A lista reúne dez veículos: Agência Brasil, Câmara, Senado, Pública, g1 (RSS de política), BBC News Brasil, Brasil de Fato, Repórter Brasil, Mongabay Brasil e ((o))eco. A expansão melhora a diversidade de tipos de publicação, mas não comprova equilíbrio político; avaliações continuam pendentes. Cada fonte mantém até 80 artigos, por até 14 dias, com teto de 800. As seis novas fontes usam apenas metadados, sem trechos ou fotografias. A classificação temática é heurística; os agrupamentos automáticos ainda precisam de monitoramento editorial. A síntese revisada e as observações têm caráter informativo, com links às reportagens.
+A lista reúne dez veículos: Agência Brasil, Câmara, Senado, Pública, g1 (oito editorias RSS), BBC News Brasil, Brasil de Fato, Repórter Brasil, Mongabay Brasil e ((o))eco. A expansão melhora a diversidade de tipos de publicação, mas não comprova equilíbrio político; avaliações continuam pendentes. Cada fonte mantém até 80 artigos, alternando editorias para preservar assuntos de menor volume, por até 14 dias, com teto de 800. As seis novas fontes usam apenas metadados, sem trechos ou fotografias. A classificação temática é heurística; os agrupamentos automáticos ainda precisam de monitoramento editorial. A síntese revisada e as observações têm caráter informativo, com links às reportagens.
+
+## Editorias e imagens
+
+O g1 mantém um único cadastro e participa com RSS de política, economia, mundo, educação, ciência, saúde, tecnologia e meio ambiente. ETag e Last-Modified são independentes por endpoint. Falhas parciais preservam a edição e ficam visíveis. Os oito feeds não aumentam sua contagem de fontes. O antigo endpoint `natureza` não é usado: retornava conteúdo de 2024 na validação de 29/10/2026. Os feeds especializados da EBC retornaram HTTP 500 nessa revisão e não foram ativados.
+
+A classificação privilegia editoria do endereço, depois a editoria explícita do feed, e por fim termos do título/tags. Educação, tecnologia e meio ambiente têm filtros próprios. A classificação continua heurística e pode ser corrigida.
+
+`lib/news/ingestion.ts` coleta os RSS com concorrência limitada e cache por endpoint. `lib/news/photos.ts` consulta somente matérias da Agência Brasil e Senado para verificar imagem e crédito juntos. Não usa apenas og:image nem persiste o texto da página. A EBC é consultada no máximo duas vezes por execução, separando inícios de requisições em pelo menos dez segundos (inclusive após o RSS); o Senado tem até três consultas de matérias, excluindo páginas de áudio. O enriquecimento tem orçamento de 32 segundos e é opcional para a coleta: falhas não bloqueiam a edição. Fotos sem autoria, de terceiros ou marcadas como reprodução proibida não são admitidas. Resultados sem foto são guardados por 48 horas. Imagens verificadas sobrevivem à próxima leitura do RSS e podem ilustrar o mesmo grupo com a atribuição original.
+
+Cartões e páginas sem imagem usam composição tipográfica; falhas de carregamento também removem o espaço da imagem. Não usamos imagens genéricas para simular fotografias de um evento.
 
 ## Agrupamento e validação
 

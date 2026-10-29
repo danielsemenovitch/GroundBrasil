@@ -45,3 +45,62 @@ test('reviewed real RSS headline pairs: same events merge; shared topics stay se
  const fixture=JSON.parse(await readFile(new URL('./fixtures/grouping-headlines.json',import.meta.url),'utf8'));
  for(const p of fixture.pairs){const stories=clusterArticles(p.articles);assert.equal(stories.length,p.sameEvent?1:2,p.articles.map((a:Article)=>a.title).join(' / '));}
 });
+
+test('publisher sections and feed topics take precedence over incidental headline words',async()=>{
+ const {categorize}=await import('../lib/news/core.ts');
+ assert.equal(categorize('Pesquisa restaura fotografias das famílias',[],'https://example.test/brasil/noticia'),'Brasil');
+ assert.equal(categorize('Inteligência artificial chega à sala de aula',[],'https://g1.globo.com/educacao/noticia/test'),'Educação');
+ assert.equal(categorize('Presidente anuncia investimento',[],'https://g1.globo.com/tecnologia/noticia/test'),'Tecnologia');
+ assert.equal(categorize('Uma reportagem sobre o clima',[],'https://g1.globo.com/meio-ambiente/noticia/test'),'Meio ambiente');
+ assert.equal(categorize('A histórica virada de Lula',['Universidade','Educação'],'https://www.brasildefato.com.br/report'),'Política');
+ assert.equal(categorize('Uma nova descoberta',[],'https://g1.globo.com/servico/test','Ciência'),'Ciência');
+});
+test('topic quotas retain smaller sections without increasing a publisher source count',()=>{
+ const politics=Array.from({length:100},(_,i)=>({...article(`Debate no parlamento sobre tema ${i}`,`p${i}`,'g1'),url:`https://g1.globo.com/politica/${i}`}));
+ const education={...article('Estudantes conhecem as datas do Enem','edu','g1'),url:'https://g1.globo.com/educacao/enem'};
+ const health={...article('Campanha de vacinação alcança novos municípios','health','g1'),url:'https://g1.globo.com/saude/vacina'};
+ const e=makeEdition([...politics,education,health],[],now);
+ assert.equal(e.articles.length,80);assert.ok(e.articles.some(a=>a.id==='edu'));assert.ok(e.articles.some(a=>a.id==='health'));
+ assert.equal(e.articles.find(a=>a.id==='edu')?.category,'Educação');
+ assert.ok(e.stories.every(s=>s.sourceIds.length===1));
+});
+test('multiple feeds deduplicate articles, isolate conditional caching and report partial failures',async()=>{
+ const {collectSourceFeeds}=await import('../lib/news/ingestion.ts');
+ const source={...SOURCES.find(s=>s.id==='g1')!,additionalFeeds:[{url:'https://g1.globo.com/rss/g1/economia/',category:'Economia' as const},{url:'https://g1.globo.com/rss/g1/saude/',category:'Saúde' as const}]};
+ const last={sourceId:'g1',ok:true,count:1,fetchedAt:now,error:null,endpoints:[{url:source.feedUrl,ok:true,count:1,fetchedAt:now,error:null,etag:'politics-etag'}]};
+ const xml='<rss><channel><item><title>Manchete de economia para testar os feeds</title><link>https://g1.globo.com/economia/noticia/test</link><pubDate>2026-10-27</pubDate></item><item><title>Manchete de economia para testar os feeds</title><link>https://g1.globo.com/economia/noticia/test</link><pubDate>2026-10-27</pubDate></item></channel></rss>';
+ const fetcher=(async(input:RequestInfo|URL,init?:RequestInit)=>{
+  const url=String(input),headers=new Headers(init?.headers);
+  if(url===source.feedUrl){assert.equal(headers.get('If-None-Match'),'politics-etag');return new Response(null,{status:304});}
+  assert.equal(headers.get('If-None-Match'),null);
+  return url.includes('economia')?new Response(xml,{headers:{etag:'economy-etag'}}):new Response(null,{status:503});
+ }) as typeof fetch;
+ const r=await collectSourceFeeds(source,last,now,fetcher);
+ assert.equal(r.articles.length,1);assert.equal(r.articles[0].category,'Economia');
+ assert.equal(r.status.sourceId,'g1');assert.equal(r.status.ok,true);assert.equal(r.status.partial,true);
+ assert.equal(r.status.endpoints?.length,3);assert.match(r.status.error!,/Saúde: HTTP 503/);
+ assert.equal(r.status.endpoints?.[1].etag,'economy-etag');
+});
+test('photo extraction pairs the real figure with its own author and rejects missing or third-party credits',async()=>{
+ const {extractArticlePhoto}=await import('../lib/news/photos.ts');
+ const {creditedImage}=await import('../lib/news/core.ts');
+ const {readFile}=await import('node:fs/promises');
+ const fixture=JSON.parse(await readFile(new URL('./fixtures/photo-markup.json',import.meta.url),'utf8'));
+ for(const p of fixture){const s=SOURCES.find(s=>s.id===p.sourceId)!;const photo=extractArticlePhoto(p.html,s,p.url);assert.ok(photo);assert.equal(photo.credit,p.credit);assert.equal(photo.sourceUrl,p.url);}
+ const ab=SOURCES[0],url='https://agenciabrasil.ebc.com.br/economia/noticia/test',src='https://imagens.ebc.com.br/photo.jpg';
+ assert.equal(creditedImage(ab,url,src,'Agência Brasil'),null);
+ assert.equal(creditedImage(ab,url,src,'Reuters/Agência Brasil/Proibida reprodução'),null);
+ assert.equal(creditedImage(ab,url,'https://unverified.test/photo.jpg','Antônio Cruz/Agência Brasil'),null);
+ assert.equal(extractArticlePhoto('<meta property="og:image" content="'+src+'"><p>Antônio Cruz/Agência Brasil</p>',ab,url),null);
+ assert.equal(creditedImage(SOURCES.find(s=>s.id==='g1')!,url,src,'Antônio Cruz/Agência Brasil'),null);
+});
+test('a verified photo survives RSS updates and illustrates its event with original provenance',()=>{
+ const image={url:'https://imagens.ebc.com.br/photo.jpg',credit:'Antônio Cruz/Agência Brasil',licenseUrl:SOURCES[0].licenseUrl,sourceUrl:'https://agenciabrasil.ebc.com.br/economia/noticia/test'};
+ const old={...article('Banco Central anuncia redução da taxa de juros','ab','agencia-brasil'),url:image.sourceUrl,image,imageCheckedAt:now};
+ const fresh={...old,image:null,imageCheckedAt:undefined};
+ const g1={...article('Banco Central anuncia redução da taxa de juros','g1','g1'),url:'https://g1.globo.com/economia/noticia/test'};
+ const e=makeEdition([old,fresh,g1],[],now);
+ assert.equal(e.articles.length,2);assert.deepEqual(e.articles.find(a=>a.id==='ab')?.image,image);
+ assert.equal(e.articles.find(a=>a.id==='ab')?.imageCheckedAt,now);
+ assert.equal(e.stories.length,1);assert.equal(e.stories[0].sourceIds.length,2);assert.deepEqual(e.stories[0].image,image);
+});

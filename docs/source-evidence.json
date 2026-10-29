@@ -11,7 +11,7 @@
       "terms": "https://agenciabrasil.ebc.com.br/sobre",
       "additionalTerms": "https://acessoainformacao.ebc.com.br/perguntas-frequentes",
       "permissions": "Reproduction authorized for journalistic purposes with source credit; photographs only if authored by AB/EBC and credit known. Exclude third-party agency material without permission. Commercial uses require licensing.",
-      "imagePolicy": "Only known EBC/AB-owned photos; per-article credit required. RSS imagem-destaque does not itself establish authorship.",
+      "imagePolicy": "RSS credit or the same article figure containing credito-foto and its image. Require named AB/EBC photographer and allowed image host; exclude third-party/prohibited images. At most two article lookups per run, ten seconds between request starts, 48-hour negative cache.",
       "leaning": null,
       "robots": "https://agenciabrasil.ebc.com.br/robots.txt",
       "crawlDelaySeconds": 10,
@@ -43,7 +43,7 @@
       "ownerEvidence": "https://www12.senado.leg.br/assessoria-de-imprensa/lista-dos-servicos-da-secom",
       "terms": "https://www12.senado.leg.br/noticias/politica-de-uso",
       "permissions": "Articles/photos freely reproducible without mischaracterization, with Agência Senado AND author credit. Audio: Rádio Senado; video: TV Senado and author.",
-      "imagePolicy": "No images supplied in standard RSS. Obtain and verify attribution from article or show typographic card.",
+      "imagePolicy": "RSS usually omits photos. For /noticias/materias/ pages only, pair fonteslide image src with its own credito attribute. Require named Agência Senado photographer, HTTPS and Senado host. Up to three pages/run; no audio pages.",
       "leaning": null,
       "robots": "https://www12.senado.leg.br/robots.txt",
       "crawlDelaySeconds": 0,
@@ -69,13 +69,23 @@
       "id": "g1",
       "name": "g1",
       "feed": "https://g1.globo.com/rss/g1/politica/",
-      "feedStatus": "200 XML; 100 feed items at validation; parser retains at most 60 per fetch",
+      "feedStatus": "Eight active RSS endpoints verified by HTTP 200 and current item dates on 2026-10-29; metadata only. Legacy natureza endpoint excluded because latest item was dated 2024-05-20.",
       "terms": "https://g1.globo.com/rss/g1/",
       "ownerEvidence": "https://g1.globo.com",
       "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
       "imagePolicy": "Disabled",
       "leaning": null,
-      "verifiedAt": "2026-10-29"
+      "verifiedAt": "2026-10-29",
+      "feeds": [
+        "https://g1.globo.com/rss/g1/politica/",
+        "https://g1.globo.com/rss/g1/economia/",
+        "https://g1.globo.com/rss/g1/mundo/",
+        "https://g1.globo.com/rss/g1/educacao/",
+        "https://g1.globo.com/rss/g1/ciencia/",
+        "https://g1.globo.com/rss/g1/saude/",
+        "https://g1.globo.com/rss/g1/tecnologia/",
+        "https://g1.globo.com/rss/g1/meio-ambiente/"
+      ]
     },
     {
       "id": "bbc",

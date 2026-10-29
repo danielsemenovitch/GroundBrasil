@@ -13,4 +13,14 @@ export const SOURCES: Source[] = [
 
 ];
 export const sourceById = (id: string) => SOURCES.find(s => s.id === id);
-export const CATEGORIES = ['Todas','Política','Economia','Brasil','Mundo','Ciência','Saúde','Cultura','Esportes'] as const;
+const g1 = SOURCES.find(s => s.id === 'g1')!;
+g1.additionalFeeds = [
+ {url:'https://g1.globo.com/rss/g1/economia/',category:'Economia'},
+ {url:'https://g1.globo.com/rss/g1/mundo/',category:'Mundo'},
+ {url:'https://g1.globo.com/rss/g1/educacao/',category:'Educação'},
+ {url:'https://g1.globo.com/rss/g1/ciencia/',category:'Ciência'},
+ {url:'https://g1.globo.com/rss/g1/saude/',category:'Saúde'},
+ {url:'https://g1.globo.com/rss/g1/tecnologia/',category:'Tecnologia'},
+ {url:'https://g1.globo.com/rss/g1/meio-ambiente/',category:'Meio ambiente'},
+];
+export const CATEGORIES = ['Todas','Política','Economia','Brasil','Mundo','Educação','Ciência','Tecnologia','Saúde','Meio ambiente','Cultura','Esportes'] as const;

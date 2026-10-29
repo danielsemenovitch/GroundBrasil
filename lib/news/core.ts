@@ -1,7 +1,7 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { ELECTION_REVIEW } from '../../data/editorial.ts';
 import { SOURCES } from './sources.ts';
-import type { Article, Category, Edition, FeedStatus, Source, Story, Leaning } from './types.ts';
+import type { Article, Category, Edition, FeedStatus, Source, Story, Leaning, NewsImage } from './types.ts';
 const STOP = new Set('a o as os um uma uns umas de da do das dos em no na nos nas por para com e ou que se ao aos à às é são foi ser mais após sobre nesta neste entre como pelo pela pelos pelas seu sua seus suas diz afirma noticia noticias brasil brasileiro brasileira governo presidente feira terça quarta quinta sexta segunda sabado domingo'.split(' '));
 export const normalize = (s:string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function plainText(s:string):string {
@@ -10,17 +10,44 @@ export function plainText(s:string):string {
 export function canonicalUrl(raw:string,base?:string):string|null {
  try {const u=new URL(raw,base);if(u.protocol!=='https:'&&u.protocol!=='http:')return null;u.hash='';for(const k of [...u.searchParams.keys()])if(/^(utm_|fbclid|gclid|ref$)/i.test(k))u.searchParams.delete(k);return u.href.replace(/\/$/,'');}catch{return null;}
 }
+export function creditedImage(source:Source,articleUrl:string,src:string,rawCredit:string):NewsImage|null{
+ if(!source.imagesAllowed)return null;
+ const credit=plainText(rawCredit).replace(/^[©\s]+|^Foto:\s*/gi,'').trim();
+ const owner=source.id==='agencia-brasil'?/ag[eê]ncia brasil|\bebc\b/ig:source.id==='senado'?/ag[eê]ncia senado/ig:source.id==='camara'?/c[aâ]mara dos deputados/ig:null;
+ if(!owner||!owner.test(credit))return null;owner.lastIndex=0;
+ if(/proibida|reuters|getty|associated press|\bafp\b|\bap photo\b/i.test(credit)||!/[a-z]{3}/i.test(normalize(credit.replace(owner,''))))return null;
+ const url=canonicalUrl(src,articleUrl);if(!url)return null;
+ const parsed=new URL(url);
+ const hosts=source.id==='agencia-brasil'?['imagens.ebc.com.br','agenciabrasil.ebc.com.br']:source.id==='senado'?['www12.senado.leg.br']:['www.camara.leg.br','camara.leg.br'];
+ if(parsed.protocol!=='https:'||!hosts.includes(parsed.hostname)||/logo|imagem-padrao|loading/i.test(parsed.pathname)||!/\.(?:jpe?g|png|webp)(?:\/|$)/i.test(parsed.pathname))return null;
+ return {url,credit,licenseUrl:source.licenseUrl,sourceUrl:articleUrl};
+}
+
+
 export function hash(s:string):string {let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
 export function tokens(s:string):string[] {return [...new Set(normalize(s).match(/[a-z0-9]+/g)?.filter(t=>t.length>2&&!STOP.has(t))||[])];}
-export function categorize(title:string,tags:string[],url:string):Category {
- const t=normalize(`${title} ${tags.join(' ')} ${url}`);
+export function categorize(title:string,tags:string[],url:string,hint?:Category):Category {
+ // Publisher section paths are stronger evidence than a passing word in a headline.
+ const path=normalize(new URL(url).pathname);
+ const sections:Record<string,Category>={politica:'Política',economia:'Economia',mundo:'Mundo',internacional:'Mundo',educacao:'Educação',ciencia:'Ciência','ciencia-e-tecnologia':'Ciência',tecnologia:'Tecnologia',saude:'Saúde','meio-ambiente':'Meio ambiente',natureza:'Meio ambiente',cultura:'Cultura','pop-arte':'Cultura',esportes:'Esportes'};
+ const section=path.split('/').find(p=>sections[p]);
+ if(section)return sections[section];
+ if(hint)return hint;
+ const infer=(t:string):Category|null=>{
  if(/saude|vacina|dengue|cancer|hospital|medicin/.test(t))return 'Saúde';
- if(/ciencia|pesquisa|cientific|tecnologia|inteligencia artificial|universidade/.test(t))return 'Ciência';
+ if(/educacao|escola|ensino|estudant|professor|enem|vestibular|alfabetiza|universidade/.test(t))return 'Educação';
+ if(/meio.ambiente|climat|desmat|biodivers|conservacao|amazonia|floresta|especies|fauna|bioma|manguez|carbono/.test(t))return 'Meio ambiente';
+ if(/tecnologia|inteligencia artificial|ciberseguranca|software|aplicativo|internet|\b(?:google|apple|microsoft|openai|nvidia)\b/.test(t))return 'Tecnologia';
+ if(/ciencia|cientific|astronom|espacial|astronaut|\bnasa\b|\bplaneta\b/.test(t))return 'Ciência';
  if(/esporte|futebol|copa|flamengo|palmeiras|olimpic/.test(t))return 'Esportes';
  if(/cultura|cinema|musica|festival|livro|literatura/.test(t))return 'Cultura';
  if(/economia|juros|inflacao|banco central|pib|dolar|imposto|emprego|fiscal|renda|orcament|gasto publico|financeir|indeniz|tributari|aliquota|cana-de-acucar/.test(t))return 'Economia';
  if(/internacional|mundo|eua|trump|israel|gaza|ucrania|russia|onu/.test(t))return 'Mundo';
  if(/politica|lula|bolsonaro|eleic|deputad|senad|camara|congresso|projeto de lei|votac|presidente|stf/.test(t))return 'Política';
+ return null;
+ };
+ const headline=infer(normalize(title));if(headline)return headline;
+ for(const tag of tags){const direct=sections[normalize(tag).replace(/ /g,'-')];if(direct)return direct;}
  return 'Brasil';
 }
 type XmlValue = string | number | Record<string,unknown> | XmlValue[] | undefined;
@@ -31,7 +58,7 @@ export function parseFeedDate(value:string):number {
  const months:Record<string,string>={jan:'Jan',fev:'Feb',mar:'Mar',abr:'Apr',mai:'May',jun:'Jun',jul:'Jul',ago:'Aug',set:'Sep',out:'Oct',nov:'Nov',dez:'Dec'};
  return Date.parse(value.replace(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/gi,m=>months[m.toLowerCase()]));
 }
-export function parseFeed(xml:string,source:Source,now=new Date().toISOString()):Article[] {
+export function parseFeed(xml:string,source:Source,now=new Date().toISOString(),categoryHint?:Category):Article[] {
  if(xml.length>3_000_000 || /<!DOCTYPE|<!ENTITY/i.test(xml))throw new Error('Feed inválido ou acima do limite');
  if(XMLValidator.validate(xml)!==true)throw new Error('XML inválido');
  const p=new XMLParser({ignoreAttributes:false,processEntities:true,htmlEntities:true,trimValues:true}).parse(xml);
@@ -55,11 +82,9 @@ export function parseFeed(xml:string,source:Source,now=new Date().toISOString())
    const src=txt(item['imagem-destaque'])||content.match(/<img\b[^>]*src=["']([^"']+)["']/i)?.[1]||'';
    let credit=plainText(content.match(/class=["'][^"']*midia-creditos[^"']*["'][^>]*>([\s\S]*?)<\//i)?.[1]||'');
    if(!credit)credit=plainText(content.match(/(?:Foto|Fotografia|Crédito)s?:\s*([^<\n"'>]{4,100})/i)?.[1]||'');
-   const imageUrl=canonicalUrl(src,source.url);
-   const allowedCredit= source.id==='camara'? /c[aâ]mara dos deputados/i.test(credit):source.id==='senado'?/ag[eê]ncia senado/i.test(credit):/ag[eê]ncia brasil|\bebc\b/i.test(credit);
-   if(imageUrl&&credit&&allowedCredit&&new URL(imageUrl).protocol==='https:'&&/^(www\.)?camara\.leg\.br$|^(imagens\.ebc\.com\.br|agenciabrasil\.ebc\.com\.br|www12\.senado\.leg\.br)$/.test(new URL(imageUrl).hostname))image={url:imageUrl,credit,licenseUrl:source.licenseUrl,sourceUrl:url};
+   image=creditedImage(source,url,src,credit);
   }
-  out.push({id:hash(url),sourceId:source.id,title,url,publishedAt,fetchedAt:now,excerpt,author:plainText(txt(item['dc:creator']||item.author)),category:categorize(title,categories,url),image,tags:categories.slice(0,8)});
+  out.push({id:hash(url),sourceId:source.id,title,url,publishedAt,fetchedAt:now,excerpt,author:plainText(txt(item['dc:creator']||item.author)),category:categorize(title,categories,url,categoryHint),categoryHint,image,tags:categories.slice(0,8)});
  }
  return out;
 }
@@ -158,9 +183,20 @@ export function clusterArticles(input:Article[],prior:Story[]=[]):Story[]{
 }
 export function makeEdition(articles:Article[],feeds:FeedStatus[],now=new Date().toISOString(),prior:Story[]=[]):Edition {
  const cutoff=Date.parse(now)-14*86400000;
- const m=new Map<string,Article>();for(const a of articles)if(Date.parse(a.publishedAt)>=cutoff&&Date.parse(a.publishedAt)<=Date.parse(now)+300000)m.set(a.url,a);
- // Per-publisher quotas prevent a high-volume feed from evicting other voices.
- const perSource=new Map<string,number>();
- const retained=[...m.values()].filter(a=>SOURCES.some(s=>s.id===a.sourceId)).sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt)).filter(a=>{const n=perSource.get(a.sourceId)||0;if(n>=80)return false;perSource.set(a.sourceId,n+1);return true;}).slice(0,800);
+ const m=new Map<string,Article>();for(const a of articles)if(Date.parse(a.publishedAt)>=cutoff&&Date.parse(a.publishedAt)<=Date.parse(now)+300000){
+  const old=m.get(a.url);
+  m.set(a.url,{...a,image:a.image||old?.image||null,imageCheckedAt:a.imageCheckedAt||old?.imageCheckedAt,category:categorize(a.title,a.tags,a.url,a.categoryHint)});
+ }
+ // Round-robin topic buckets preserve each publisher's smaller sections within its quota.
+ const retained:Article[]=[];
+ for(const source of SOURCES){
+  const buckets=new Map<Category,Article[]>();
+  for(const a of [...m.values()].filter(a=>a.sourceId===source.id).sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt))){
+   if(!buckets.has(a.category))buckets.set(a.category,[]);buckets.get(a.category)!.push(a);
+  }
+  const selected:Article[]=[];while(selected.length<80){let added=false;for(const bucket of buckets.values()){if(selected.length>=80)break;const a=bucket.shift();if(a){selected.push(a);added=true;}}if(!added)break;}
+  retained.push(...selected);
+ }
+ retained.sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt));retained.splice(800);
  return {version:1,generatedAt:now,articles:retained,stories:clusterArticles(retained,prior),feeds};
 }
