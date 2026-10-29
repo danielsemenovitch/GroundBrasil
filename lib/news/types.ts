@@ -2,10 +2,12 @@ export type Category = 'Política' | 'Economia' | 'Brasil' | 'Mundo' | 'Ciência
 export type Leaning = 'left' | 'center' | 'right' | 'unrated';
 export interface Source {
   id: string; name: string; short: string; url: string; feedUrl: string;
-  kind: 'Jornalismo público' | 'Legislativo' | 'Independente';
+  kind: 'Jornalismo público' | 'Legislativo' | 'Independente' | 'Privado';
   owner: string; ownerEvidence: string; license: string; licenseUrl: string;
   color: string; summaryAllowed: boolean; imagesAllowed: boolean;
   leaning: Leaning; ratingEvidence: string[]; ratingDate: string | null;
+  articleHosts?: string[];
+  checkedAt?: string;
 }
 export interface NewsImage { url: string; credit: string; licenseUrl: string; sourceUrl: string }
 export interface Article {

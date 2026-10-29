@@ -26,6 +26,11 @@ export function categorize(title:string,tags:string[],url:string):Category {
 type XmlValue = string | number | Record<string,unknown> | XmlValue[] | undefined;
 const txt=(v:XmlValue):string=> typeof v==='string'?v: typeof v==='number'?String(v):v&& !Array.isArray(v)?txt(v['#text'] as XmlValue):'';
 const arr=(v:unknown):unknown[]=>v===undefined?[]:Array.isArray(v)?v:[v];
+/** Some Portuguese feeds emit localized RFC month names (e.g. Out). */
+export function parseFeedDate(value:string):number {
+ const months:Record<string,string>={jan:'Jan',fev:'Feb',mar:'Mar',abr:'Apr',mai:'May',jun:'Jun',jul:'Jul',ago:'Aug',set:'Sep',out:'Oct',nov:'Nov',dez:'Dec'};
+ return Date.parse(value.replace(/\b(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\b/gi,m=>months[m.toLowerCase()]));
+}
 export function parseFeed(xml:string,source:Source,now=new Date().toISOString()):Article[] {
  if(xml.length>3_000_000 || /<!DOCTYPE|<!ENTITY/i.test(xml))throw new Error('Feed inválido ou acima do limite');
  if(XMLValidator.validate(xml)!==true)throw new Error('XML inválido');
@@ -35,8 +40,8 @@ export function parseFeed(xml:string,source:Source,now=new Date().toISOString())
  for(const record of raw.slice(0,60)){
   const item=record as Record<string,XmlValue>;
   const title=plainText(txt(item.title));const link=txt(item.link)||txt((item.link as Record<string,XmlValue>)?.['@_href']);
-  const url=canonicalUrl(link,source.url);if(!url||!title||title.length<10||new URL(url).hostname!==new URL(source.url).hostname)continue;
-  const date=txt(item.pubDate||item.published||item.updated||item['dc:date']);const ms=Date.parse(date);
+  const url=canonicalUrl(link,source.url);if(!url||!title||title.length<10||!(source.articleHosts||[new URL(source.url).hostname]).includes(new URL(url).hostname))continue;
+  const date=txt(item.pubDate||item.published||item.updated||item['dc:date']);const ms=parseFeedDate(date);
   if(!Number.isFinite(ms)||ms>Date.parse(now)+300000)continue;
   const publishedAt=new Date(ms).toISOString();
   const content=txt(item['content:encoded']||item.description||item.summary);
@@ -58,13 +63,53 @@ export function parseFeed(xml:string,source:Source,now=new Date().toISOString())
  }
  return out;
 }
-export function similarity(a:Article,b:Article):number {
- if(Math.abs(Date.parse(a.publishedAt)-Date.parse(b.publishedAt))>72*3600000)return 0;
- const at=tokens(a.title),bt=tokens(b.title),bs=new Set(bt);const common=at.filter(t=>bs.has(t));
- if(common.length<3)return 0;
- const coverage=common.length/Math.min(at.length,bt.length);const jaccard=common.length/new Set([...at,...bt]).size;
- return .55*jaccard+.45*coverage;
+// Small, explicit Portuguese equivalences; no model or paid inference service.
+const EQUIVALENTS:Record<string,string>={
+ aprova:'aprovar',aprovou:'aprovar',aprovado:'aprovar',aprovada:'aprovar',aprovacao:'aprovar',
+ rejeita:'rejeitar',rejeitou:'rejeitar',rejeitado:'rejeitar',rejeitada:'rejeitar',rejeicao:'rejeitar',
+ sanciona:'sancionar',sancionou:'sancionar',sancionado:'sancionar',sancionada:'sancionar',sancao:'sancionar',
+ veta:'vetar',vetou:'vetar',vetado:'vetar',vetada:'vetar',veto:'vetar',
+ indicia:'indiciar',indiciou:'indiciar',indiciado:'indiciar',indiciada:'indiciar',indiciamento:'indiciar',
+ prende:'prender',prendeu:'prender',preso:'prender',presa:'prender',prisao:'prender',
+ anuncia:'anunciar',anunciou:'anunciar',anunciado:'anunciar',anunciada:'anunciar',anuncio:'anunciar',
+ eleicoes:'eleicao',reeleito:'reeleger',reeleita:'reeleger',reeleicao:'reeleger',
+ americanos:'americano',americanas:'americano',norteamericanos:'americano',estadunidenses:'americano',
+};
+const ACTIONS=new Set(['aprovar','rejeitar','sancionar','vetar','indiciar','prender']);
+function eventTokens(title:string):string[]{
+ const text=normalize(title).replace(/policia federal/g,'pf').replace(/banco central/g,'bc').replace(/supremo tribunal federal/g,'stf').replace(/estados unidos/g,'eua');
+ return [...new Set([...tokens(text),...(text.match(/\b(?:pf|bc|pl|mp|sp|rj|mg|rs|es)\b/g)||[])].map(t=>EQUIVALENTS[t]||t))];
 }
+function eventFeatures(a:Article){
+ const title=normalize(a.title),ts=eventTokens(a.title);
+ return {ts,set:new Set(ts),published:Date.parse(a.publishedAt),
+  ids:[...title.matchAll(/\b(?:pl|pec|mp|concurso)\s*(?:n[ºo.]?\s*)?(\d{2,}(?:[/.]\d{2,4})?)/g)].map(m=>m[1]),
+  actions:ts.filter(t=>ACTIONS.has(t)),
+  outcomes:['derrota','vitoria','prisao','morte'].map(word=>title.match(new RegExp(`\\b${word}\\s+(?:de|do|da)\\s+([a-z]+)`))?.[1]),
+ };
+}
+export function createSimilarity(articles:Article[]) {
+ const features=new Map(articles.map(a=>[a,eventFeatures(a)]));
+ const df=new Map<string,number>();for(const f of features.values())for(const t of f.ts)df.set(t,(df.get(t)||0)+1);
+ const weights=new Map([...df].map(([t,n])=>[t,(1+Math.log(1+articles.length/(1+n)))**2]));
+ const sum=(ts:string[])=>ts.reduce((n,t)=>n+(weights.get(t)||1),0);
+ const norms=new Map([...features].map(([a,f])=>[a,sum(f.ts)]));
+ return (a:Article,b:Article):number=>{
+  const x=features.get(a)||eventFeatures(a),y=features.get(b)||eventFeatures(b);
+  if(Math.abs(x.published-y.published)>72*3600000)return 0;
+  // Reject distinct bill/draw identifiers, incompatible actions, and outcome subjects.
+  if(x.ids.length&&y.ids.length&&!x.ids.some(id=>y.ids.includes(id)))return 0;
+  if(x.actions.length&&y.actions.length&&!x.actions.some(t=>y.actions.includes(t)))return 0;
+  if(x.outcomes.some((t,i)=>t&&y.outcomes[i]&&t!==y.outcomes[i]))return 0;
+  // Approval by two separate chambers is a different legislative step.
+  if(x.actions.includes('aprovar')&&y.actions.includes('aprovar')&&((x.set.has('camara')&&y.set.has('senado'))||(x.set.has('senado')&&y.set.has('camara')))&&!(x.set.has('camara')&&x.set.has('senado'))&&!(y.set.has('camara')&&y.set.has('senado')))return 0;
+  let common=0,shared=0;for(const t of x.ts)if(y.set.has(t)){common++;shared+=weights.get(t)||1;}
+  if(common<3)return 0;
+  const av=norms.get(a)||sum(x.ts),bv=norms.get(b)||sum(y.ts);
+  return .7*shared/Math.sqrt(av*bv)+.3*shared/Math.min(av,bv);
+ };
+}
+export function similarity(a:Article,b:Article):number {return createSimilarity([a,b])(a,b);}
 export function coverageOf(sourceIds:string[],sources:Source[]=SOURCES){
  const counts:Record<Leaning,number>={left:0,center:0,right:0,unrated:0};
  for(const id of new Set(sourceIds)) {const s=sources.find(x=>x.id===id);const valid=s?.ratingEvidence.length&&s.ratingDate;counts[valid?s!.leaning:'unrated']++;}return counts;
@@ -80,10 +125,16 @@ export function blindspot(coverage:Record<Leaning,number>){
 export function clusterArticles(input:Article[],prior:Story[]=[]):Story[]{
  const dedup=new Map<string,Article>();for(const a of input)dedup.set(a.url,a);
  const articles=[...dedup.values()].sort((a,b)=>a.publishedAt.localeCompare(b.publishedAt)||a.id.localeCompare(b.id));
- const groups:Article[][]=[];
+ const groups:Article[][]=[];const compare=createSimilarity(articles);
  for(const a of articles){
-  let best:Article[]|null=null,score=.53;
-  for(const g of groups){const s=similarity(a,g[0]);if(s>score){score=s;best=g;}}
+  let best:Article[]|null=null,score=.54;
+  for(const g of groups){
+   if(Date.parse(a.publishedAt)-Date.parse(g[0].publishedAt)>72*3600000)continue;
+   const scores=g.map(b=>compare(a,b));
+   // Require support from the first report and the majority, preventing topic chains.
+   if(scores[0]<.42||scores.some(s=>s===0)||scores.filter(s=>s>=.42).length<Math.ceil(g.length*.6))continue;
+   const s=Math.max(...scores);if(s>score){score=s;best=g;}
+  }
   if(best)best.push(a);else groups.push([a]);
  }
  const priorMap=new Map<string,string>();for(const s of prior)for(const a of s.articles)priorMap.set(a.id,s.id);
@@ -108,6 +159,8 @@ export function clusterArticles(input:Article[],prior:Story[]=[]):Story[]{
 export function makeEdition(articles:Article[],feeds:FeedStatus[],now=new Date().toISOString(),prior:Story[]=[]):Edition {
  const cutoff=Date.parse(now)-14*86400000;
  const m=new Map<string,Article>();for(const a of articles)if(Date.parse(a.publishedAt)>=cutoff&&Date.parse(a.publishedAt)<=Date.parse(now)+300000)m.set(a.url,a);
- const retained=[...m.values()].sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt)).slice(0,240);
+ // Per-publisher quotas prevent a high-volume feed from evicting other voices.
+ const perSource=new Map<string,number>();
+ const retained=[...m.values()].filter(a=>SOURCES.some(s=>s.id===a.sourceId)).sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt)).filter(a=>{const n=perSource.get(a.sourceId)||0;if(n>=80)return false;perSource.set(a.sourceId,n+1);return true;}).slice(0,800);
  return {version:1,generatedAt:now,articles:retained,stories:clusterArticles(retained,prior),feeds};
 }

@@ -1,0 +1,294 @@
+{
+  "reviewedAt": "2026-10-29",
+  "description": "Pares reais de manchetes RSS; rótulos para agrupamento por evento, não avaliação de veracidade ou posição política.",
+  "pairs": [
+    {
+      "sameEvent": true,
+      "reason": "Manchetes descrevem o mesmo acontecimento, com nomes e ação compatíveis.",
+      "articles": [
+        {
+          "id": "11t6myv",
+          "sourceId": "brasil-de-fato",
+          "title": "Comissão da Câmara de SP analisa pedido de impeachment contra Ricardo Nunes",
+          "url": "https://www.brasildefato.com.br/2026/10/29/comissao-da-camara-de-sp-analisa-pedido-de-impeachment-contra-ricardo-nunes",
+          "publishedAt": "2026-10-29T18:27:05.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Economia",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "xhhfwy",
+          "sourceId": "agencia-brasil",
+          "title": "Câmara Municipal de SP discute impeachment do prefeito Ricardo Nunes",
+          "url": "https://agenciabrasil.ebc.com.br/politica/noticia/2026-10/camara-municipal-de-sp-discute-impeachment-do-prefeito-ricardo-nunes",
+          "publishedAt": "2026-10-29T15:21:00.000Z",
+          "fetchedAt": "2026-10-29T18:16:40.262Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Política",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": true,
+      "reason": "Manchetes descrevem o mesmo acontecimento, com nomes e ação compatíveis.",
+      "articles": [
+        {
+          "id": "1be1ylg",
+          "sourceId": "agencia-brasil",
+          "title": "Fachin arquiva mais cinco investigações do Inquérito das Fake News",
+          "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-10/fachin-arquiva-mais-cinco-investigacoes-do-inquerito-das-fake-news",
+          "publishedAt": "2026-10-29T17:28:00.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Política",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "f7k8vv",
+          "sourceId": "g1",
+          "title": "Fachin determina arquivamento de cinco investigações ligadas ao inquérito das fake news",
+          "url": "https://g1.globo.com/politica/noticia/2026/10/29/fachin-determina-arquivamento-de-cinco-investigacoes-ligadas-ao-inquerito-das-fake-news.ghtml",
+          "publishedAt": "2026-10-29T13:30:53.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Política",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": true,
+      "reason": "Manchetes descrevem o mesmo acontecimento, com nomes e ação compatíveis.",
+      "articles": [
+        {
+          "id": "8nxka",
+          "sourceId": "agencia-brasil",
+          "title": "Contas do governo têm superávit de R$ 4,8 bilhões em setembro",
+          "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2026-10/contas-do-governo-tem-superavit-de-r-48-bilhoes-em-setembro",
+          "publishedAt": "2026-10-29T14:14:00.000Z",
+          "fetchedAt": "2026-10-29T16:21:13.665Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Economia",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "1l4qrm3",
+          "sourceId": "g1",
+          "title": "Contas do governo têm superávit de R$ 4,8 bilhões em setembro, melhor saldo para o mês em três anos",
+          "url": "https://g1.globo.com/economia/noticia/2026/10/29/contas-do-governo-tem-superavit-de-r-48-bilhoes-em-setembro-melhor-saldo-para-o-mes-em-tres-anos.ghtml",
+          "publishedAt": "2026-10-29T12:33:48.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Economia",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": true,
+      "reason": "Manchetes descrevem o mesmo acontecimento, com nomes e ação compatíveis.",
+      "articles": [
+        {
+          "id": "dcwvro",
+          "sourceId": "brasil-de-fato",
+          "title": "PF indicia Vorcaro e mais 14 investigados no caso Master",
+          "url": "https://www.brasildefato.com.br/2026/10/28/pf-indicia-vorcaro-e-mais-14-investigados-no-caso-master",
+          "publishedAt": "2026-10-28T23:02:37.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Economia",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "zuh57j",
+          "sourceId": "agencia-brasil",
+          "title": "PF indicia Vorcaro e mais 14 investigados no caso Master",
+          "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-10/pf-indicia-vorcaro-e-mais-14-investigados-no-caso-master",
+          "publishedAt": "2026-10-28T20:05:00.000Z",
+          "fetchedAt": "2026-10-28T22:21:09.669Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Brasil",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": true,
+      "reason": "Manchetes descrevem o mesmo acontecimento, com nomes e ação compatíveis.",
+      "articles": [
+        {
+          "id": "1y0dkz1",
+          "sourceId": "agencia-brasil",
+          "title": "Presidente do TSE diz que eleições ocorreram dentro da normalidade",
+          "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-10/presidente-do-tse-diz-que-eleicoes-ocorreram-dentro-da-normalidade",
+          "publishedAt": "2026-10-28T22:41:00.000Z",
+          "fetchedAt": "2026-10-29T10:22:55.492Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Política",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "olz18i",
+          "sourceId": "g1",
+          "title": "Presidente do TSE diz que entregou pleito com segurança e que as eleições 'transcorreram dentro da mais absoluta normalidade'",
+          "url": "https://g1.globo.com/politica/noticia/2026/10/28/presidente-do-tse-diz-que-entregou-pleito-com-seguranca-e-que-as-eleicoes-2026-transcorreram-dentro-da-mais-absoluta-normalidade.ghtml",
+          "publishedAt": "2026-10-28T22:12:33.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Política",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": true,
+      "reason": "Manchetes descrevem o mesmo acontecimento, com nomes e ação compatíveis.",
+      "articles": [
+        {
+          "id": "rm1pxy",
+          "sourceId": "brasil-de-fato",
+          "title": "Netanyahu lidera apuração em Israel, mas não obtém maioria, e bancada palestina bate recorde com 19 cadeiras",
+          "url": "https://www.brasildefato.com.br/2026/10/28/netanyahu-lidera-apuracao-em-israel-mas-nao-obtem-maioria-e-bancada-palestina-bate-recorde-com-19-cadeiras",
+          "publishedAt": "2026-10-28T21:39:46.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "9tl44z",
+          "sourceId": "bbc",
+          "title": "Netanyahu lidera eleição de Israel, mas não obtém maioria: como será formado o próximo governo?",
+          "url": "https://www.bbc.com/portuguese/articles/cwr7y182ry0no?at_medium=RSS&at_campaign=rss",
+          "publishedAt": "2026-10-28T16:44:14.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": false,
+      "reason": "Tema ou atores em comum, mas ação, recorte ou acontecimento distintos.",
+      "articles": [
+        {
+          "id": "121g1or",
+          "sourceId": "brasil-de-fato",
+          "title": "Trump não quer contaminar eleições dos EUA com derrota de Flávio Bolsonaro, avalia analista internacional",
+          "url": "https://www.brasildefato.com.br/2026/10/28/trump-nao-quer-contaminar-eleicoes-dos-eua-com-derrota-de-flavio-bolsonaro-avalia-analista-internacional",
+          "publishedAt": "2026-10-28T22:39:17.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "fzi1c6",
+          "sourceId": "publica",
+          "title": "Flávio Bolsonaro pode assistir de camarote derrota de Trump nas eleições dos EUA",
+          "url": "https://apublica.org/2026/10/flavio-bolsonaro-pode-assistir-de-camarote-derrota-de-trump-nas-eleicoes-dos-eua",
+          "publishedAt": "2026-10-28T20:00:00.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": false,
+      "reason": "Tema ou atores em comum, mas ação, recorte ou acontecimento distintos.",
+      "articles": [
+        {
+          "id": "x3ex3s",
+          "sourceId": "bbc",
+          "title": "Qual o futuro do bolsonarismo após Flávio Bolsonaro ir para os EUA?",
+          "url": "https://www.bbc.com/portuguese/articles/cw98zmy9gnj8o?at_medium=RSS&at_campaign=rss",
+          "publishedAt": "2026-10-29T10:05:44.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "ddvkq4",
+          "sourceId": "agencia-brasil",
+          "title": "Aeronave com Flávio Bolsonaro e família pousa nos Estados Unidos",
+          "url": "https://agenciabrasil.ebc.com.br/politica/noticia/2026-10/aeronave-com-flavio-bolsonaro-e-familia-pousa-nos-estados-unidos",
+          "publishedAt": "2026-10-28T13:29:00.000Z",
+          "fetchedAt": "2026-10-28T17:03:02.373Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Política",
+          "image": null,
+          "tags": []
+        }
+      ]
+    },
+    {
+      "sameEvent": false,
+      "reason": "Tema ou atores em comum, mas ação, recorte ou acontecimento distintos.",
+      "articles": [
+        {
+          "id": "uqal17",
+          "sourceId": "g1",
+          "title": "Governo quer manter pragmatismo com EUA e Argentina e não pretende reagir à fuga de Flávio Bolsonaro",
+          "url": "https://g1.globo.com/politica/noticia/2026/10/29/governo-quer-manter-pragmatismo-com-eua-e-argentina-e-nao-pretende-reagir-a-fuga-de-flavio-bolsonaro.ghtml",
+          "publishedAt": "2026-10-29T19:28:41.000Z",
+          "fetchedAt": "2026-10-29T19:48:09.087Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        },
+        {
+          "id": "hd5h75",
+          "sourceId": "agencia-brasil",
+          "title": "Em carta golpista, Flávio agradece Milei e Trump por apoio para fuga",
+          "url": "https://agenciabrasil.ebc.com.br/politica/noticia/2026-10/em-carta-golpista-flavio-agradece-milei-e-trump-por-apoio-para-fuga",
+          "publishedAt": "2026-10-28T21:22:00.000Z",
+          "fetchedAt": "2026-10-28T22:21:09.669Z",
+          "excerpt": "",
+          "author": "",
+          "category": "Mundo",
+          "image": null,
+          "tags": []
+        }
+      ]
+    }
+  ]
+}

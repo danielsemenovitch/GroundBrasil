@@ -16,3 +16,32 @@ test('unknown ratings never silently become center',()=>{const fake={...SOURCES[
 test('blindspot minimum count, rated share and exact boundary',()=>{assert.equal(blindspot({left:4,center:0,right:0,unrated:0}).eligible,false);assert.equal(blindspot({left:8,center:1,right:1,unrated:4}).eligible,false);const yes=blindspot({left:8,center:1,right:1,unrated:2});assert.equal(yes.eligible,true);assert.equal(yes.score,70);assert.equal(blindspot({left:3,center:4,right:3,unrated:0}).eligible,false);assert.equal(blindspot({left:0,center:0,right:0,unrated:9}).score,null);});
 test('edition retains current article dates, expires old records and keeps stable IDs',()=>{const a=article('Câmara aprova projeto de educação e tecnologia');const old=article('Antiga notícia fora da janela de retenção','old','senado','2026-09-01T12:00:00Z');const first=makeEdition([a,old],[],now);const second=makeEdition([a],[],now,first.stories);assert.equal(first.articles.length,1);assert.equal(second.stories[0].id,first.stories[0].id);assert.equal(first.articles[0].publishedAt,a.publishedAt);});
 test('plain text strips scripts',()=>{assert.equal(plainText('<script>alert(1)</script><p>Texto seguro</p>'),'Texto seguro');});
+
+test('localized Portuguese feed dates and explicit BBC hosts parse without admitting offsite links',async()=>{
+ const source=SOURCES.find(s=>s.id==='bbc')!;
+ const xml='<rss><channel><item><title>Reportagem da BBC sobre uma notícia</title><link>https://www.bbc.co.uk/portuguese/articles/test</link><pubDate>27 Out 2026 12:00:00 +0000</pubDate><description>Texto protegido</description></item><item><title>Outro domínio que não pode entrar</title><link>https://bbc.co.uk.evil.test/abc</link><pubDate>27 Out 2026 12:00:00 +0000</pubDate></item></channel></rss>';
+ const a=parseFeed(xml,source,now);assert.equal(a.length,1);assert.equal(a[0].publishedAt,'2026-10-27T12:00:00.000Z');assert.equal(a[0].excerpt,'');assert.equal(a[0].image,null);
+});
+test('different bill identifiers and legislative decisions remain separate',()=>{
+ for(const [a,b] of [
+  ['Câmara aprova PL 1234 sobre benefício para servidores federais','Câmara aprova PL 5678 sobre benefício para servidores federais'],
+  ['Câmara aprova projeto de benefício para servidores federais','Senado aprova projeto de benefício para servidores federais'],
+  ['Lula sanciona projeto de benefício para servidores federais','Lula veta projeto de benefício para servidores federais'],
+ ])assert.equal(clusterArticles([article(a),article(b,'b','senado')]).length,2);
+});
+test('equivalent acronyms and verb forms join the same event',()=>{
+ const a=article('Polícia Federal indicia empresários por fraude no Banco Master');
+ const b=article('Empresários são indiciados pela PF por fraude no Banco Master','b','g1');
+ assert.equal(clusterArticles([a,b]).length,1);
+});
+test('one high-volume publisher cannot evict smaller publishers',()=>{
+ const many=Array.from({length:110},(_,i)=>article(`Notícia ${i} com um assunto específico`,String(i),'g1'));
+ const small=article('Uma investigação de outro veículo com cobertura própria','small','publica','2026-10-26T12:00:00Z');
+ const e=makeEdition([...many,small],[],now);
+ assert.equal(e.articles.filter(a=>a.sourceId==='g1').length,80);assert.ok(e.articles.some(a=>a.id==='small'));
+});
+test('reviewed real RSS headline pairs: same events merge; shared topics stay separate',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const fixture=JSON.parse(await readFile(new URL('./fixtures/grouping-headlines.json',import.meta.url),'utf8'));
+ for(const p of fixture.pairs){const stories=clusterArticles(p.articles);assert.equal(stories.length,p.sameEvent?1:2,p.articles.map((a:Article)=>a.title).join(' / '));}
+});

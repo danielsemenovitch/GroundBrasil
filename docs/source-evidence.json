@@ -64,6 +64,78 @@
       "robots": "https://apublica.org/robots.txt",
       "crawlDelaySeconds": 10,
       "verifiedAt": "2026-10-28"
+    },
+    {
+      "id": "g1",
+      "name": "g1",
+      "feed": "https://g1.globo.com/rss/g1/politica/",
+      "feedStatus": "200 XML; 100 feed items at validation; parser retains at most 60 per fetch",
+      "terms": "https://g1.globo.com/rss/g1/",
+      "ownerEvidence": "https://g1.globo.com",
+      "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29"
+    },
+    {
+      "id": "bbc",
+      "name": "BBC News Brasil",
+      "feed": "https://feeds.bbci.co.uk/portuguese/rss.xml",
+      "feedStatus": "200 XML; 32 feed items at validation; parser retains at most 60 per fetch",
+      "terms": "https://www.bbc.com/portuguese/institutional/2009/01/090129_rss_tc2",
+      "ownerEvidence": "https://www.bbc.com/portuguese/institutional-50054434",
+      "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29"
+    },
+    {
+      "id": "brasil-de-fato",
+      "name": "Brasil de Fato",
+      "feed": "https://www.brasildefato.com.br/feed/",
+      "feedStatus": "200 XML; 99 feed items at validation; parser retains at most 60 per fetch",
+      "terms": "https://www.brasildefato.com.br/quem-somos/",
+      "ownerEvidence": "https://www.brasildefato.com.br/quem-somos/",
+      "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29"
+    },
+    {
+      "id": "reporter-brasil",
+      "name": "Repórter Brasil",
+      "feed": "https://reporterbrasil.org.br/feed/",
+      "feedStatus": "200 XML; 10 feed items at validation; parser retains at most 60 per fetch",
+      "terms": "https://reporterbrasil.org.br/transparencia/",
+      "ownerEvidence": "https://reporterbrasil.org.br/transparencia/",
+      "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29"
+    },
+    {
+      "id": "mongabay",
+      "name": "Mongabay Brasil",
+      "feed": "https://brasil.mongabay.com/feed/",
+      "feedStatus": "200 XML; 20 feed items at validation; parser retains at most 60 per fetch",
+      "terms": "https://brasil.mongabay.com/republicacoes/",
+      "ownerEvidence": "https://brasil.mongabay.com/sobre/",
+      "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29"
+    },
+    {
+      "id": "oeco",
+      "name": "((o))eco",
+      "feed": "https://oeco.org.br/feed/",
+      "feedStatus": "200 XML; 12 feed items at validation; parser retains at most 60 per fetch",
+      "terms": "https://oeco.org.br/politicas-do-site/",
+      "ownerEvidence": "https://oeco.org.br/quem-somos/",
+      "permissions": "Metadata indexing only: unchanged original headline, date, author when provided, direct article URL. No excerpts, full text or photographs. This is a conservative metadata-only interpretation, not a claim of a broad syndication license. Publisher-specific reproduction conditions remain applicable.",
+      "imagePolicy": "Disabled",
+      "leaning": null,
+      "verifiedAt": "2026-10-29"
     }
   ],
   "seedEvent": {
@@ -107,13 +179,6 @@
   },
   "disabledCandidates": [
     {
-      "name": "Brasil de Fato",
-      "feed": "https://www.brasildefato.com.br/feed/",
-      "status": "403; no bypass",
-      "terms": "https://www.brasildefato.com.br/quem-somos/",
-      "leaningEvidence": "Self-declares aligned left in editorial principle 10; label as self-description if used, not external independent rating."
-    },
-    {
       "name": "Jornal da USP",
       "feed": "https://jornal.usp.br/feed/",
       "status": "403; no bypass",
@@ -124,6 +189,19 @@
       "feed": "https://agencia.fapesp.br/rss",
       "status": "200 XML; not enabled, restricted NC-ND + pixel for republication",
       "terms": "https://agencia.fapesp.br/politica-de-republicacao-da-agencia-fapesp/30159"
+    },
+    {
+      "name": "CNN Brasil",
+      "feed": "https://admin.cnnbrasil.com.br/feed/",
+      "status": "Feed returned XML but admin host robots.txt disallows /; not enabled.",
+      "terms": "https://admin.cnnbrasil.com.br/robots.txt"
     }
-  ]
+  ],
+  "expansionNotes": {
+    "g1": "National politics RSS selected instead of general feed dominated by rapidly changing regional headlines. The feed also includes related economic and fact-check headlines. Its copyright statement is retained as evidence; no photographs or summaries are used. The legacy terms URL redirects to the homepage, so no broad republication permission is asserted.",
+    "bbc": "Official Portuguese RSS instructions explicitly support websites subject to BBC terms, attribution and no BBC logo.",
+    "brasil-de-fato": "Feed returned 200 XML on 2026-10-29. About page retrieved through web search; direct about/robots fetch returned 403 and was not bypassed. Editorial principle 10 is a self-description, not an independent bias assessment.",
+    "folha": "Not enabled in this expansion; feed has redirect-wrapped article links and reproduction restrictions need further review.",
+    "cadence": "One configured RSS request per source per run, conditional requests, timeout, no retry/bypass loop."
+  }
 }

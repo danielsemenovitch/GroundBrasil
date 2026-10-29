@@ -12,7 +12,7 @@ MVP editorial em português brasileiro: RSS real, comparação entre fontes, fav
 - CSS editorial próprio, Lucide; não depende de componentes visuais pagos.
 - Cloudflare D1: artigos normalizados, edição publicada, histórico de ingestão e lease de concorrência.
 - `lib/news/core.ts`: parser RSS/Atom, canonização, categorias, deduplicação, agrupamento, cobertura e critérios de pontos cegos. Funções puras e testadas.
-- `lib/news/repository.ts`: coleta e persistência. Quatro hosts fixos, timeout, limite de XML, sem entidades externas, ETag/Last-Modified, retenção e publicação transacional.
+- `lib/news/repository.ts`: coleta e persistência. Dez feeds fixos, timeout, limite de XML, sem entidades externas, ETag/Last-Modified, retenção e publicação transacional.
 - `data/bootstrap.json`: edição real coletada em 28/10/2026, usada e identificada como snapshot apenas enquanto o banco está vazio. Não é uma fixture fictícia.
 - `data/editorial.ts`: agrupamento revisado com URLs explícitas, síntese e observações sustentadas por três reportagens. Não infere opinião política.
 - APIs versionadas reutilizáveis para um aplicativo Android futuro. Não há aplicativo Android neste repositório.
@@ -72,7 +72,13 @@ O workflow `.github/workflows/news-refresh.yml` é uma alternativa preparada par
 
 Todas as fontes estão **não avaliadas** politicamente. Propriedade pública não significa centro/esquerda/direita. A versão limitada de pontos cegos mostra regras, mas não pontua histórias sem dados suficientes. Não há integração de fact-checking nem vereditos automatizados.
 
-A lista inicial tem predominância pública/institucional. É preciso ampliar as fontes e adotar protocolo editorial com revisão antes de alegar representatividade política. A classificação temática é heurística; os agrupamentos automáticos ainda precisam de monitoramento editorial. A síntese revisada e as observações têm caráter informativo, com links às reportagens.
+A lista reúne dez veículos: Agência Brasil, Câmara, Senado, Pública, g1 (RSS de política), BBC News Brasil, Brasil de Fato, Repórter Brasil, Mongabay Brasil e ((o))eco. A expansão melhora a diversidade de tipos de publicação, mas não comprova equilíbrio político; avaliações continuam pendentes. Cada fonte mantém até 80 artigos, por até 14 dias, com teto de 800. As seis novas fontes usam apenas metadados, sem trechos ou fotografias. A classificação temática é heurística; os agrupamentos automáticos ainda precisam de monitoramento editorial. A síntese revisada e as observações têm caráter informativo, com links às reportagens.
+
+## Agrupamento e validação
+
+O agrupador compara títulos em até 72 horas, com siglas/variações portuguesas explícitas e pesos por frequência dos termos na edição. Combina cosseno ponderado (70%) e contenção (30%), mínimo de três termos compartilhados e limiar de 0,54. Exige apoio da primeira reportagem e da maioria do grupo; veta certos conflitos de ações, números de projetos e etapas legislativas. Continua sendo um método lexical conservador: pode perder paráfrases e não comprova concordância factual.
+
+`tests/fixtures/grouping-headlines.json` contém nove pares reais revisados (seis positivos e três negativos), com origem e data, complementados por regressões sintéticas identificadas nos testes. Em uma edição validada com 343 artigos, a nova versão encontrou sete grupos com múltiplas fontes, contra cinco usando o algoritmo anterior sobre os mesmos artigos. Essa comparação mede agrupamentos, não precisão geral ou garantia de cobertura. Veja `docs/grouping-validation.md`.
 
 ## Custos e publicação
 
